@@ -37,7 +37,7 @@ const getProduct = cache(async (slugOrId: string) => {
         const transformedImages = Array.isArray(data.images)
             ? data.images.map((img: string) => {
                 if (!img) return null;
-                if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) {
+                if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/"))) {
                     return img;
                 }
                 try {

@@ -94,7 +94,7 @@ export async function getProducts(options?: {
             if (!img) return null;
             if (
               typeof img === "string" &&
-              (img.startsWith("http://") || img.startsWith("https://"))
+              (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/"))
             ) {
               return img;
             }

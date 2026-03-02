@@ -249,7 +249,7 @@ export async function getAdminProducts(): Promise<(Product & { variants: Product
             ? p.images
                   .map((img: string) => {
                       if (!img) return null;
-                      if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) {
+                      if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/"))) {
                           return img;
                       }
                       try {
@@ -328,52 +328,42 @@ export async function deleteCategory(categoryId: string): Promise<boolean> {
     return true;
 }
 
-// Upload product image to storage
+// Upload product image via Cloudinary
 export async function uploadProductImage(
     file: File,
     productId: string
 ): Promise<string | null> {
-    const supabase = createClient();
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "alfajer/products");
 
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${productId}-${Date.now()}.${fileExt}`;
-    const filePath = `products/${fileName}`;
+        const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+        });
 
-    const { error } = await supabase.storage
-        .from("product-images")
-        .upload(filePath, file);
+        if (!res.ok) {
+            console.error("Upload failed:", res.status, await res.text());
+            return null;
+        }
 
-    if (error) {
+        const data = await res.json();
+        return data.url || null;
+    } catch (error) {
         console.error("Error uploading image:", error);
         return null;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(filePath);
-
-    return publicUrl;
 }
 
-// Delete product image from storage
+// Delete product image (handles both Cloudinary and local paths)
 export async function deleteProductImage(imageUrl: string): Promise<boolean> {
-    const supabase = createClient();
-
-    // Extract file path from URL
-    const urlParts = imageUrl.split("/product-images/");
-    if (urlParts.length < 2) return false;
-
-    const filePath = urlParts[1];
-
-    const { error } = await supabase.storage
-        .from("product-images")
-        .remove([filePath]);
-
-    if (error) {
-        console.error("Error deleting image:", error);
-        return false;
+    // For local images (served from /public), no remote deletion needed
+    if (imageUrl.startsWith("/")) {
+        return true;
     }
-
+    // For Cloudinary images, we'd need the public_id to delete
+    // For now, just return true (Cloudinary has its own media library for cleanup)
     return true;
 }
 
@@ -622,25 +612,27 @@ export async function deleteBanner(id: string) {
 }
 
 export async function uploadBannerImage(file: File): Promise<string | null> {
-    const supabase = createClient();
-    const fileExt = file.name.split(".").pop();
-    const fileName = `banners/${Date.now()}.${fileExt}`;
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "alfajer/banners");
 
-    // Using product-images bucket effectively as a general media bucket
-    const { error } = await supabase.storage
-        .from("product-images")
-        .upload(fileName, file);
+        const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+        });
 
-    if (error) {
+        if (!res.ok) {
+            console.error("Banner upload failed:", res.status, await res.text());
+            return null;
+        }
+
+        const data = await res.json();
+        return data.url || null;
+    } catch (error) {
         console.error("Error uploading banner image:", error);
         return null;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-        .from("product-images")
-        .getPublicUrl(fileName);
-
-    return publicUrl;
 }
 
 

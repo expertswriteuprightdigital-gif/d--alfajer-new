@@ -102,7 +102,7 @@ export async function getProducts(options?: {
             ? p.images
                 .map((img: string) => {
                     if (!img) return null;
-                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) {
+                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/"))) {
                         return img;
                     }
                     try {
@@ -147,7 +147,7 @@ export async function getProductBySlug(slug: string): Promise<ProductWithVariant
             ? product.images
                 .map((img: string) => {
                     if (!img) return null;
-                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) {
+                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/"))) {
                         return img;
                     }
                     try {
@@ -189,7 +189,7 @@ export async function getProductById(id: string): Promise<ProductWithVariants | 
             ? product.images
                 .map((img: string) => {
                     if (!img) return null;
-                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) {
+                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/"))) {
                         return img;
                     }
                     try {
@@ -334,7 +334,7 @@ export async function searchProducts(
             ? p.images
                 .map((img: string) => {
                     if (!img) return null;
-                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) {
+                    if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("/"))) {
                         return img;
                     }
                     try {
