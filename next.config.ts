@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
   images: {
+    unoptimized: true, // Cloudinary handles optimization — bypass Vercel's /_next/image proxy (402 quota limit)
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       {
