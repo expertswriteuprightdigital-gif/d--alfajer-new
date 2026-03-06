@@ -3,40 +3,15 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/src/lib/supabase/database.types";
 
-// Force Node to use the correct Cloudflare IP for Supabase
-// This bypasses local DNS hijacking (Jio NAT64) — ONLY in development
-if (typeof window === "undefined" && process.env.NODE_ENV === "development") {
-  try {
-    const dns = eval('require("node:dns")');
-    const originalLookup = dns.lookup;
-    // @ts-ignore - overriding built-in Node type
-    dns.lookup = (hostname: string, options: any, callback: any) => {
-      if (typeof options === "function") {
-        callback = options;
-        options = {};
-      }
-      // Intercept any Supabase domain resolution
-      if (hostname.includes("supabase.co")) {
-        if (options && options.all) {
-          return callback(null, [{ address: "104.18.38.10", family: 4 }]);
-        }
-        return callback(null, "104.18.38.10", 4);
-      }
-      return originalLookup(hostname, options, callback);
-    };
-  } catch (e) {
-    // Ignore DNS override errors
-  }
-}
-
 export function createClient() {
-    const isBrowser = typeof window !== 'undefined';
-    const supabaseUrl = isBrowser
-        ? `${window.location.origin}/api/supabase`
-        : process.env.NEXT_PUBLIC_SUPABASE_URL!;
-
+    // Use the Supabase URL directly (NOT through the proxy).
+    // The proxy URL (localhost/api/supabase) causes a cookie name mismatch
+    // because the cookie key is derived from the URL hostname.
+    // Browser → proxy URL = sb-localhost-auth-token
+    // Server → real URL = sb-api-auth-token
+    // These don't match, so the session is lost on page navigation.
     return createBrowserClient<Database>(
-        supabaseUrl,
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 }

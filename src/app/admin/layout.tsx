@@ -8,6 +8,16 @@ import { AdminNotificationProvider } from "@/src/lib/admin-notifications";
 import { createClient } from "@/src/lib/supabase/client";
 import { Loader2 } from "lucide-react";
 
+const ADMIN_EMAILS = ['admin@alfajermart.com', 'admin@alfajer.com', 'tabrezkhanloyola@gmail.com', 'orders.alfajermart@gmail.com'];
+
+function isUserAdmin(user: any): boolean {
+  const meta = user?.user_metadata;
+  const isAdminMeta = meta?.role === 'admin' || meta?.isAdmin === true || meta?.admin === true;
+  const email = user?.email?.toLowerCase();
+  const isAdminEmail = email ? ADMIN_EMAILS.includes(email) : false;
+  return isAdminMeta || isAdminEmail;
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -27,42 +37,50 @@ export default function AdminLayout({
       return;
     }
 
-    const checkAuth = async () => {
-      try {
-        const supabase = createClient();
-        const { data: { session } } = await supabase.auth.getSession();
+    const supabase = createClient();
 
-        if (!session) {
-          router.push('/admin/login?redirect=' + encodeURIComponent(pathname || '/admin/dashboard'));
-          return;
+    // Use onAuthStateChange to reliably detect the session
+    // This fires with INITIAL_SESSION once the client reads from storage
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('[AdminLayout] Auth event:', event, 'Session:', !!session);
+
+        if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          if (session && isUserAdmin(session.user)) {
+            setIsAuthorized(true);
+            setIsCheckingAuth(false);
+          } else if (event === 'INITIAL_SESSION' && !session) {
+            // No session found at all - redirect to login
+            console.log('[AdminLayout] No session found, redirecting to login');
+            window.location.href = '/admin/login?redirect=' + encodeURIComponent(pathname || '/admin/dashboard');
+          } else if (session && !isUserAdmin(session.user)) {
+            // Session exists but user is not admin
+            console.log('[AdminLayout] User is not admin, signing out');
+            supabase.auth.signOut().then(() => {
+              window.location.href = '/admin/login?error=access_denied';
+            });
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setIsAuthorized(false);
+          window.location.href = '/admin/login';
         }
-
-        // Check if user is admin
-        const response = await fetch("/api/admin/check-access", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: session.user.id }),
-        });
-
-        const data = await response.json();
-
-        if (!data.isAdmin) {
-          await supabase.auth.signOut();
-          router.push('/admin/login?error=access_denied');
-          return;
-        }
-
-        setIsAuthorized(true);
-      } catch (error) {
-        console.error("Auth check error:", error);
-        router.push('/admin/login?error=auth_failed');
-      } finally {
-        setIsCheckingAuth(false);
       }
-    };
+    );
 
-    checkAuth();
-  }, [router, pathname]);
+    // Safety timeout - if no auth event fires within 8 seconds, redirect
+    const timeout = setTimeout(() => {
+      if (!isAuthorized) {
+        console.log('[AdminLayout] Auth check timed out');
+        setIsCheckingAuth(false);
+        window.location.href = '/admin/login?error=auth_timeout';
+      }
+    }, 8000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
+  }, [pathname]);
 
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);

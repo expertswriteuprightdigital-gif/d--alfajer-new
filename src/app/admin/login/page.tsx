@@ -12,6 +12,16 @@ import { Loader2, Lock, Mail, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
+const ADMIN_EMAILS = ['admin@alfajermart.com', 'admin@alfajer.com', 'tabrezkhanloyola@gmail.com', 'orders.alfajermart@gmail.com'];
+
+function isUserAdmin(user: any): boolean {
+  const meta = user?.user_metadata;
+  const isAdminMeta = meta?.role === 'admin' || meta?.isAdmin === true || meta?.admin === true;
+  const email = user?.email?.toLowerCase();
+  const isAdminEmail = email ? ADMIN_EMAILS.includes(email) : false;
+  return isAdminMeta || isAdminEmail;
+}
+
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -29,13 +39,9 @@ export default function AdminLoginPage() {
         const supabase = createClient();
         const { data: { session } } = await supabase.auth.getSession();
 
-        if (session) {
-          // Check if user is admin
-          const isAdmin = await checkAdminAccess(session.user.id);
-          if (isAdmin) {
-            router.push("/admin/dashboard");
-            return;
-          }
+        if (session && isUserAdmin(session.user)) {
+          router.push("/admin/dashboard");
+          return;
         }
       } catch (error) {
         console.error("Session check error:", error);
@@ -46,20 +52,6 @@ export default function AdminLoginPage() {
 
     checkSession();
   }, [router]);
-
-  const checkAdminAccess = async (userId: string): Promise<boolean> => {
-    try {
-      const response = await fetch("/api/admin/check-access", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
-      });
-      const data = await response.json();
-      return data.isAdmin === true;
-    } catch {
-      return false;
-    }
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,10 +83,8 @@ export default function AdminLoginPage() {
         return;
       }
 
-      // Check if user has admin access
-      const isAdmin = await checkAdminAccess(data.user.id);
-
-      if (!isAdmin) {
+      // Check if user has admin access directly from user metadata
+      if (!isUserAdmin(data.user)) {
         await supabase.auth.signOut();
         setError("Access denied. Admin privileges required.");
         setIsLoading(false);
@@ -103,10 +93,15 @@ export default function AdminLoginPage() {
 
       toast.success("Login successful!");
 
-      // Check for redirect parameter
+      // Wait for session to be fully stored in cookies before navigating
+      // This prevents the race condition where the layout can't find the session
+      await supabase.auth.getSession(); // Force session to be read & stored
+      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay for cookie propagation
+
+      // Use window.location for a full page navigation to ensure cookies are properly set
       const urlParams = new URLSearchParams(window.location.search);
       const redirect = urlParams.get('redirect') || '/admin/dashboard';
-      router.push(redirect);
+      window.location.href = redirect;
     } catch (err: any) {
       console.error("Login error:", err);
       setError(err.message || "An unexpected error occurred");
