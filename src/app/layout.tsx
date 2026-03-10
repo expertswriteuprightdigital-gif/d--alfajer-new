@@ -11,6 +11,7 @@ import { Suspense } from "react";
 import Script from "next/script";
 
 const GA_MEASUREMENT_ID = "G- 506-982-6248"; // TODO: Replace with your actual GA Measurement ID
+const GOOGLE_ADS_ID = "AW-17980198435";
 
 export const metadata: Metadata = {
   title: "Premium Dry Fruits & Spices",
@@ -49,6 +50,18 @@ export default function RootLayout({
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}');
+          `}
+        </Script>
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', '${GOOGLE_ADS_ID}');
           `}
         </Script>
       </head>
