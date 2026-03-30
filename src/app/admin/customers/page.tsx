@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, ShoppingBag, DollarSign, Users, Loader2, Mail } from "lucide-react";
 import { DataTable } from "@/src/components/admin/data-table";
@@ -35,6 +36,7 @@ const formatDate = (dateString: string | null) => {
 };
 
 export default function CustomersPage() {
+  const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -203,7 +205,7 @@ export default function CustomersPage() {
               columns={columns}
               searchKey="full_name"
               onRowClick={(row) => {
-                window.location.href = `/admin/customers/${row.id}`;
+                router.push(`/admin/customers/${row.id}`);
               }}
             />
           )}

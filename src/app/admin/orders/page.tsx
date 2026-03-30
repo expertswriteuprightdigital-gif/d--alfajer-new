@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Eye, Loader2, Filter, Download, RefreshCw, Truck, Package, CheckSquare, Square } from "lucide-react";
 import { DataTable } from "@/src/components/admin/data-table";
 import { Button } from "@/src/components/ui/button";
@@ -67,6 +67,7 @@ const escapeCSV = (field: any) => {
 
 function OrdersContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get("status") || "all");
@@ -730,7 +731,7 @@ function OrdersContent() {
           columns={columns}
           searchKey="id"
           onRowClick={(row) => {
-            window.location.href = `/admin/orders/${row.id}`;
+            router.push(`/admin/orders/${row.id}`);
           }}
         />
       )}

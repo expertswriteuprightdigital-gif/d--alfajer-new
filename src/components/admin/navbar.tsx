@@ -186,7 +186,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                       className={`flex flex-col items-start gap-1 py-3 cursor-pointer ${!isRead ? "bg-muted/50" : ""}`}
                       onClick={() => {
                         markAsRead(notification.id);
-                        window.location.href = `/admin/orders/${notification.id}`;
+                        router.push(`/admin/orders/${notification.id}`);
                       }}
                     >
                       <div className="flex items-start justify-between w-full gap-2">
