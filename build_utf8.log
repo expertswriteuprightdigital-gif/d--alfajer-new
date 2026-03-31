@@ -1,0 +1,57 @@
+﻿
+> alfajer-new@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.2.1 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" 
+"C:\Users\Tabrez Khan\AppData\Ro ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:Strin 
+   g) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./src/lib/admin-notifications.tsx:289:36
+Expected ',', got 'from'
+  [90m287 |[0m
+  [90m288 |[0m     [90m// Initial subscription 
+attempt[0m
+[31m[1m>[0m [90m289 |[0m     
+setupSubscription();eactNode } [36mfrom[0m 
+[32m"react"[0m;
+  [90m    |[0m                                    
+[31m[1m^^^^[0m
+  [90m290 |[0m [36mimport[0m { useRouter } 
+[36mfrom[0m [32m"next/navigation"[0m;
+  [90m291 |[0m [36mimport[0m { createClient } 
+[36mfrom[0m [32m"@/src/lib/supabase/client"[0m;
+  [90m292 |[0m [36mimport[0m { toast } 
+[36mfrom[0m [32m"sonner"[0m;
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./src/lib/admin-notifications.tsx [Client 
+Component Browser]
+    ./src/app/admin/layout.tsx [Client Component 
+Browser]
+    ./src/app/admin/layout.tsx [Server Component]
+
+  Client Component SSR:
+    ./src/lib/admin-notifications.tsx [Client 
+Component SSR]
+    ./src/app/admin/layout.tsx [Client Component 
+SSR]
+    ./src/app/admin/layout.tsx [Server Component]
+
+
+    at <unknown> 
+(./src/lib/admin-notifications.tsx:289:36)
