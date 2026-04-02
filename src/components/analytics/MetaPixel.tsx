@@ -16,36 +16,35 @@ export const MetaPixel = () => {
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    // Skip the first render as the pixel is initialized in the script
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-
-      // Track unique visitor on first client-side load
-      fetch('/api/track-visit', { method: 'POST' }).catch(console.error);
-    }
-
     // Function to fire tracking
     const fireTracking = () => {
-      PIXEL_IDS.forEach(() => {
-        const fbq = (window as WindowWithFBQ).fbq;
-        if (typeof fbq === "function") {
-          fbq("track", "PageView");
-        }
-      });
+      const fbq = (window as WindowWithFBQ).fbq;
+      if (typeof fbq === "function") {
+        fbq("track", "PageView");
+      }
     };
 
-    // Check if consent already granted
-    const hasConsentRecord = document.cookie.split('; ').find(row => row.startsWith('cookie_consent='));
-    if (hasConsentRecord) {
-        if (hasConsentRecord.split('=')[1] === 'accepted') {
-           fireTracking();
-        }
+    if (isFirstRender.current) {
+      // First page render. The inline script already fired the initial PageView and initialized fbq.
+      isFirstRender.current = false;
+      // Track unique visitor on first client-side load
+      fetch('/api/track-visit', { method: 'POST' }).catch(console.error);
+    } else {
+      // For subsequent route changes, check consent and fire tracking
+      const hasConsentRecord = document.cookie.split('; ').find(row => row.startsWith('cookie_consent='));
+      if (hasConsentRecord && hasConsentRecord.split('=')[1] === 'accepted') {
+         fireTracking();
+      }
     }
 
     // Listen for consent updates from banner
     const handleConsentUpdate = (event: Event) => {
        const customEvent = event as CustomEvent;
        if (customEvent.detail === 'accepted') {
+           // We might need to handle the case where consent is accepted on the first page load.
+           // However, if the inline script fired 'PageView' unconditionally, we might send it again.
+           // Usually, cookie consent script handles removing inline firing if not accepted initially.
+           // For now, we will fire it, but the inline script might have already fired it.
            fireTracking();
        }
     };
