@@ -4,7 +4,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useRef } from "react";
 
-const PIXEL_IDS = ["1192303348657440", "1306274733589363"];
+const PIXEL_IDS = ["1192303348657440"];
 
 interface WindowWithFBQ extends Window {
   fbq?: (...args: unknown[]) => void;
