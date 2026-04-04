@@ -21,6 +21,7 @@ import { cn } from "@/src/lib/utils";
 import { ProductModal } from "./ProductModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { useProducts, useCategories, type TransformedProduct } from "@/src/lib/hooks/use-products";
+import { trackAddToCart, trackInitiateCheckout } from "@/src/utils/pixel";
 
 interface FilterState {
   priceRange: [number, number];
@@ -742,8 +743,16 @@ function ProductCard({ product }: { product: TransformedProduct }) {
         originalPrice: product.originalPrice ? Number(product.originalPrice) : undefined,
         packageSize: product.packageSize,
        });
-       setTimeout(() => setIsAdding(false), 1000);
-       return;
+        // Track AddToCart
+        trackAddToCart({
+          id: product.id,
+          name: product.name,
+          price: Number(product.price),
+          quantity: 1,
+        });
+
+        setTimeout(() => setIsAdding(false), 1000);
+        return;
     }
 
     if (selectedVariant) {
@@ -758,6 +767,14 @@ function ProductCard({ product }: { product: TransformedProduct }) {
             originalPrice: selectedVariant.originalPrice ? Number(selectedVariant.originalPrice) : undefined,
             packageSize: selectedVariant.size,
         });
+        // Track AddToCart
+        trackAddToCart({
+            id: product.id,
+            name: product.name,
+            price: Number(selectedVariant.price),
+            quantity: 1,
+        });
+
         setTimeout(() => setIsAdding(false), 1000);
     }
   };
@@ -765,6 +782,18 @@ function ProductCard({ product }: { product: TransformedProduct }) {
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Track InitiateCheckout
+    const price = selectedVariant ? Number(selectedVariant.price) : Number(product.price);
+    trackInitiateCheckout(
+        [{
+            productId: product.id,
+            price: price,
+            quantity: 1,
+        }],
+        price
+    );
+
     if (selectedVariant) {
         router.push(`/checkout?product=${product.id}&variant=${selectedVariant.id}`);
     } else {

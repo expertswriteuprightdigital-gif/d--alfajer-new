@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/src/components/providers/i18n-provider";
-import { trackViewContent, trackAddToCart } from "@/src/utils/pixel";
+import { trackViewContent, trackAddToCart, trackInitiateCheckout } from "@/src/utils/pixel";
 import {
   Dialog,
   DialogContent,
@@ -507,6 +507,18 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
                   size="lg"
                   className="flex-1 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-semibold h-12 rounded-xl shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 transition-all duration-300 text-sm"
                   onClick={() => {
+                    if (product) {
+                        // Track InitiateCheckout
+                        const price = selectedVariant?.price || product.price;
+                        trackInitiateCheckout(
+                            [{
+                                productId: product.id,
+                                price: price,
+                                quantity: quantity,
+                            }],
+                            price * quantity
+                        );
+                    }
                     router.push(`/checkout?product=${product.id}`);
                     onOpenChange(false);
                   }}

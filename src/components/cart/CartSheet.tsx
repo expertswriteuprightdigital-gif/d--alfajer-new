@@ -16,6 +16,7 @@ import {
 } from "@/src/components/ui/sheet";
 import { useCartStore, CartItem } from "@/src/lib/cart-store";
 import { useI18n } from "@/src/components/providers/i18n-provider";
+import { trackInitiateCheckout } from "@/src/utils/pixel";
 import { cn } from "@/src/lib/utils";
 
 export function CartSheet() {
@@ -124,6 +125,15 @@ export function CartSheet() {
               <div className="px-6 py-5 space-y-3">
                 <Button
                   onClick={() => {
+                    // Track InitiateCheckout
+                    trackInitiateCheckout(
+                      items.map(item => ({
+                        productId: item.productId,
+                        price: item.price,
+                        quantity: item.quantity || 1
+                      })),
+                      totalPrice
+                    );
                     closeCart();
                     router.push("/checkout");
                   }}

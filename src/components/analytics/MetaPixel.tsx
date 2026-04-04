@@ -68,7 +68,7 @@ export const MetaPixel = () => {
             t.src=v;s=b.getElementsByTagName(e)[0];
             s.parentNode.insertBefore(t,s)}(window, document,'script',
             'https://connect.facebook.net/en_US/fbevents.js');
-            ${PIXEL_IDS.map((id) => `fbq('init', '${id}');`).join("\n")}
+            ${PIXEL_IDS.map((id) => `fbq('set', 'autoConfig', false, '${id}');\n            fbq('init', '${id}');`).join("\n")}
             fbq('track', 'PageView');
           `,
         }}

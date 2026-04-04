@@ -13,7 +13,7 @@ import { useCartStore } from "@/src/lib/cart-store";
 import { useWishlistStore } from "@/src/lib/wishlist-store";
 import { useI18n } from "@/src/components/providers/i18n-provider";
 import { ProductReviews } from "./ProductReviews";
-import { trackViewContent, trackAddToCart } from "@/src/utils/pixel";
+import { trackViewContent, trackAddToCart, trackInitiateCheckout } from "@/src/utils/pixel";
 
 
 interface RelatedProduct {
@@ -142,6 +142,15 @@ function ProductDetailContent({ productId, initialProduct, relatedProducts = [] 
 
   const handleBuyNow = () => {
     if (selectedVariant) {
+      // Track InitiateCheckout
+      trackInitiateCheckout(
+        [{
+          productId: product.id,
+          price: selectedVariant.price,
+          quantity: quantity,
+        }],
+        selectedVariant.price * quantity
+      );
       // Navigate to checkout with product ID (without adding to cart)
       router.push(`/checkout?product=${product.id}`);
     }
