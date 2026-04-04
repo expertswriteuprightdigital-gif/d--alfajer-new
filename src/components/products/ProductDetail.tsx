@@ -13,6 +13,8 @@ import { useCartStore } from "@/src/lib/cart-store";
 import { useWishlistStore } from "@/src/lib/wishlist-store";
 import { useI18n } from "@/src/components/providers/i18n-provider";
 import { ProductReviews } from "./ProductReviews";
+import { trackViewContent, trackAddToCart } from "@/src/utils/pixel";
+
 
 interface RelatedProduct {
   id: string;
@@ -85,6 +87,18 @@ function ProductDetailContent({ productId, initialProduct, relatedProducts = [] 
     }
   }, [product, isInWishlist]);
 
+  // Track ViewContent on product load (once per mount/product change)
+  useEffect(() => {
+    if (product) {
+        trackViewContent({
+            id: product.id,
+            name: product.name,
+            price: selectedVariant?.price || product.price,
+        });
+    }
+  }, [product?.id]);
+
+
   if (!product) {
     return <div className="p-8 text-center">{t("product.notFound")}</div>;
   }
@@ -112,9 +126,19 @@ function ProductDetailContent({ productId, initialProduct, relatedProducts = [] 
         packageSize: selectedVariant.size,
         quantity: quantity
       });
+      
+      // Track AddToCart
+      trackAddToCart({
+          id: product.id,
+          name: product.name,
+          price: selectedVariant.price,
+          quantity: quantity,
+      });
+
       setQuantity(1);
     }
   };
+
 
   const handleBuyNow = () => {
     if (selectedVariant) {

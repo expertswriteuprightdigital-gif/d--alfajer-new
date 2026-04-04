@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/src/components/providers/i18n-provider";
+import { trackViewContent, trackAddToCart } from "@/src/utils/pixel";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +32,9 @@ import {
 import { cn } from "@/src/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { motion, AnimatePresence } from "framer-motion";
+import { useCartStore } from "@/src/lib/cart-store";
+import { useWishlistStore } from "@/src/lib/wishlist-store";
+import { toast } from "sonner";
 
 interface ProductVariant {
   id: string;
@@ -73,6 +77,8 @@ interface ProductModalProps {
 export function ProductModal({ product, open, onOpenChange }: ProductModalProps) {
   const router = useRouter();
   const { t, formatCurrency, convertCurrency } = useI18n();
+  const { addItem } = useCartStore();
+  const { isInWishlist, toggleWishlist } = useWishlistStore();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0);
@@ -146,8 +152,15 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
       setSelectedMediaIndex(0);
       setQuantity(1);
       setImageLoaded(false);
+    } else if (open && product) {
+        // Track ViewContent when modal opens
+        trackViewContent({
+            id: product.id,
+            name: product.name,
+            price: selectedVariant?.price || product.price,
+        });
     }
-  }, [open]);
+  }, [open, product?.id]);
 
   if (!product) return null;
 
@@ -460,6 +473,32 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
                 <Button
                   size="lg"
                   className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-12 rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all duration-300 text-sm"
+                  onClick={() => {
+                      if (product && selectedVariant) {
+                        // Add to cart store
+                        addItem({
+                            id: `${product.id}-${selectedVariant.id}`,
+                            productId: product.id,
+                            variantId: selectedVariant.id,
+                            name: `${product.name} - ${selectedVariant.size}`,
+                            image: product.image,
+                            price: selectedVariant.price,
+                            originalPrice: selectedVariant.originalPrice,
+                            packageSize: selectedVariant.size,
+                            quantity: quantity
+                        });
+
+                        // Track AddToCart
+                        trackAddToCart({
+                            id: product.id,
+                            name: product.name,
+                            price: selectedVariant.price,
+                            quantity: quantity,
+                        });
+
+                        toast.success(`${product.name} added to cart`);
+                      }
+                  }}
                 >
                   <ShoppingCart className="h-5 w-5 mr-2" />
                   Add to Cart

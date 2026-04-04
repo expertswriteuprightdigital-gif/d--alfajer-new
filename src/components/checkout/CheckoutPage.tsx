@@ -14,6 +14,8 @@ import { Badge } from "@/src/components/ui/badge";
 import { useCartStore } from "@/src/lib/cart-store";
 import { useI18n } from "@/src/components/providers/i18n-provider";
 import { useAuth } from "@/src/lib/auth-context";
+import { trackInitiateCheckout, trackPurchase } from "@/src/utils/pixel";
+
 
 import {
   paymentMethods,
@@ -232,6 +234,21 @@ function CheckoutPageContent() {
     }
     fetchCodSetting();
   }, []);
+
+  // Track InitiateCheckout on page mount (once)
+  useEffect(() => {
+    if (items.length > 0) {
+      trackInitiateCheckout(
+        items.map(item => ({
+          productId: item.productId,
+          price: item.price,
+          quantity: item.quantity || 1
+        })),
+        getTotalPrice()
+      );
+    }
+  }, []); // Only on mount
+
 
   // Filter payment methods based on COD setting
   const availablePaymentMethods = useMemo(() => {
@@ -453,11 +470,25 @@ function CheckoutPageContent() {
               if (result.success) {
                 toast.dismiss();
                 toast.success('Payment successful!');
+                toast.success('Payment successful!');
                 setConfirmedOrderItems([...items]); // Save items to show in success screen
                 setConfirmedTotal(total);
                 setOrderNumber(data.orderNumber);
+                
+                // Track Purchase
+                trackPurchase(
+                    items.map(item => ({
+                        productId: item.productId,
+                        price: item.price,
+                        quantity: item.quantity || 1
+                    })),
+                    total,
+                    data.orderNumber
+                );
+
                 clearCart();
                 setIsProcessing(false);
+
               } else {
                 toast.dismiss();
                 toast.error(result.error || 'Payment verification failed. Please contact support if payment was deducted.');
@@ -486,9 +517,21 @@ function CheckoutPageContent() {
       setConfirmedTotal(total);
       setOrderNumber(newOrderNumber);
 
+      // Track Purchase
+      trackPurchase(
+          items.map(item => ({
+              productId: item.productId,
+              price: item.price,
+              quantity: item.quantity || 1
+          })),
+          total,
+          newOrderNumber
+      );
+
       // Clear cart
       clearCart();
       setIsProcessing(false);
+
 
     } catch (error) {
       console.error('Checkout error:', error);
