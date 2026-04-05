@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import Script from "next/script";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronDown, AlertCircle, Check, Truck, Zap, Package, Shield, Star, ShoppingBag, ArrowRight, Home } from "lucide-react";
 import { getSupabaseClient } from "@/src/lib/supabase/client";
@@ -544,7 +545,11 @@ function CheckoutPageContent() {
   // Order Confirmation - Inline on the same page
   if (orderNumber) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-36 pb-16 text-gray-900">
+      <>
+        <Script id="facebook-purchase-pixel" strategy="afterInteractive">
+          {`fbq('track', 'Purchase');`}
+        </Script>
+        <div className="min-h-screen bg-gray-50 pt-36 pb-16 text-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Success Header */}
@@ -659,8 +664,9 @@ function CheckoutPageContent() {
           )}
         </div>
       </div>
-    );
-  }
+    </>
+  );
+}
 
   if (items.length === 0) {
     // If we have a product param (Buy Now mode), show loader instead of empty cart
